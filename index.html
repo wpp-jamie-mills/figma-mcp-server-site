@@ -1,0 +1,1540 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Figma MCP Server: Claude Desktop for Figma</title>
+    <meta name="description" content="Let Claude Desktop read, comment on, and draw in your Figma files. It runs locally on your Mac." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Figma MCP Server: Claude Desktop for Figma" />
+    <meta property="og:description" content="Let Claude Desktop read, comment on, and draw in your Figma files. It runs locally on your Mac." />
+    <meta name="figma-mcp-build" content="0b2506cc3d18d32ac8f513511c07e90f5f6c178e" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%230b1020%27%2F%3E%3Crect%20x%3D%276%27%20y%3D%276%27%20width%3D%2718%27%20height%3D%2718%27%20rx%3D%272.5%27%20fill%3D%27none%27%20stroke%3D%27%23f2f2f2%27%20stroke-width%3D%272.4%27%2F%3E%3Crect%20x%3D%2719.5%27%20y%3D%2719.5%27%20width%3D%277%27%20height%3D%277%27%20rx%3D%271%27%20fill%3D%27%23ffffff%27%20stroke%3D%27%233b7bea%27%20stroke-width%3D%272%27%2F%3E%3C%2Fsvg%3E" />
+    <link rel="alternate" type="text/markdown" href="llms.txt" />
+    <link
+      rel="preload"
+      href="fonts/InstrumentSerif-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="fonts/Satoshi-Variable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <style>
+      @font-face {
+        font-family: "Instrument Serif";
+        src: url("fonts/InstrumentSerif-Regular.woff2") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Satoshi";
+        src: url("fonts/Satoshi-Variable.woff2") format("woff2");
+        font-weight: 300 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "IBM Plex Mono";
+        src: url("fonts/IBMPlexMono-Regular.woff2") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      /* Tokens: shadcn/ui semantic names. Dark is the primary direction; light follows the system setting. */
+      :root {
+        color-scheme: dark;
+        --radius: 0.625rem;
+        --background: oklch(0.12 0.003 260);
+        --foreground: oklch(0.955 0.005 250);
+        --card: oklch(0.165 0.006 260);
+        --card-foreground: oklch(0.955 0.005 250);
+        --popover: oklch(0.18 0.006 260);
+        --popover-foreground: oklch(0.955 0.005 250);
+        --primary: oklch(0.955 0.004 90);
+        --primary-foreground: oklch(0.17 0.004 260);
+        --secondary: oklch(0.22 0.007 260);
+        --secondary-foreground: oklch(0.94 0.005 250);
+        --muted: oklch(0.22 0.007 260);
+        --muted-foreground: oklch(0.71 0.012 250);
+        --accent: oklch(0.24 0.025 255);
+        --accent-foreground: oklch(0.82 0.11 255);
+        --border: oklch(0.9 0.01 250 / 0.14);
+        --input: oklch(0.9 0.01 250 / 0.2);
+        --ring: oklch(0.72 0.12 255);
+        --success: oklch(0.77 0.14 155);
+        --success-foreground: oklch(0.16 0.04 155);
+        --code: oklch(0.105 0.004 260);
+        --code-foreground: oklch(0.89 0.009 250);
+        --code-muted: oklch(0.7 0.012 250);
+        --code-border: oklch(0.9 0.01 250 / 0.12);
+        --highlight: oklch(1 0 0 / 0.035);
+        --sheen: oklch(1 0 0 / 0.025);
+        --shadow-raised: 0 24px 48px -24px oklch(0 0 0 / 0.7);
+
+        --font-display: "Instrument Serif", ui-serif, Georgia, "Times New Roman", serif;
+        --font-sans:
+          "Satoshi", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --radius-sm: calc(var(--radius) * 0.6);
+        --radius-md: calc(var(--radius) * 0.8);
+        --radius-lg: var(--radius);
+        --radius-xl: calc(var(--radius) * 1.4);
+        --radius-2xl: calc(var(--radius) * 1.8);
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+        --rail: 78rem;
+        --gutter: clamp(1rem, 0.6rem + 1.8vw, 2rem);
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          color-scheme: light;
+          --background: oklch(0.965 0.004 90);
+          --foreground: oklch(0.17 0.004 260);
+          --card: oklch(0.995 0.002 90);
+          --card-foreground: oklch(0.17 0.004 260);
+          --popover: oklch(0.995 0.002 90);
+          --popover-foreground: oklch(0.17 0.004 260);
+          --primary: oklch(0.17 0.004 260);
+          --primary-foreground: oklch(0.975 0.003 90);
+          --secondary: oklch(0.925 0.004 100);
+          --secondary-foreground: oklch(0.22 0.004 260);
+          --muted: oklch(0.925 0.004 100);
+          --muted-foreground: oklch(0.45 0.01 255);
+          --accent: oklch(0.925 0.018 255);
+          --accent-foreground: oklch(0.34 0.14 255);
+          --border: oklch(0.84 0.006 255 / 0.75);
+          --input: oklch(0.84 0.006 255 / 0.9);
+          --ring: oklch(0.49 0.17 255);
+          --success: oklch(0.49 0.13 155);
+          --success-foreground: oklch(0.98 0.015 150);
+          --code: oklch(0.13 0.006 260);
+          --code-foreground: oklch(0.9 0.008 250);
+          --code-muted: oklch(0.72 0.012 250);
+          --code-border: oklch(0.13 0.006 260);
+          --highlight: oklch(1 0 0 / 0.6);
+          --sheen: transparent;
+          --shadow-raised: 0 24px 48px -28px oklch(0.2 0.01 260 / 0.28);
+        }
+      }
+
+      /* Base */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 1.5rem;
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--foreground);
+        font: 400 1rem/1.65 var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+      :focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+        border-radius: var(--radius-sm);
+      }
+      a {
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-color: var(--muted-foreground);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.2em;
+        transition: text-decoration-color 140ms var(--ease);
+      }
+      a:hover {
+        text-decoration-color: currentColor;
+      }
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-weight: 600;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        text-wrap: balance;
+      }
+      h2 {
+        font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.5rem);
+      }
+      h3 {
+        font-size: 1.1875rem;
+        letter-spacing: -0.01em;
+      }
+      p {
+        margin: 0 0 1rem;
+        text-wrap: pretty;
+      }
+      ul,
+      ol {
+        margin: 0 0 1rem;
+        padding-left: 1.35rem;
+      }
+      li {
+        margin: 0.45rem 0;
+        padding-left: 0.2rem;
+      }
+      ol > li::marker {
+        font: 400 0.8125rem var(--font-mono);
+        color: var(--muted-foreground);
+      }
+      ul > li::marker {
+        color: var(--muted-foreground);
+      }
+      strong {
+        font-weight: 600;
+      }
+      code {
+        font: 400 0.875em var(--font-mono);
+        background: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.06em 0.36em;
+        overflow-wrap: anywhere;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      .skip {
+        position: absolute;
+        left: var(--gutter);
+        top: 0.75rem;
+        z-index: 10;
+        padding: 0.65rem 1rem;
+        border-radius: var(--radius-md);
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-weight: 600;
+        text-decoration: none;
+        transform: translateY(-200%);
+      }
+      .skip:focus {
+        transform: none;
+      }
+      .rail {
+        max-width: var(--rail);
+        margin: 0 auto;
+        padding: 0 var(--gutter);
+      }
+      .kicker {
+        margin: 0 0 0.85rem;
+        font: 500 0.8125rem/1.4 var(--font-sans);
+        color: var(--muted-foreground);
+      }
+      .lede {
+        font-size: 1.0625rem;
+        color: var(--muted-foreground);
+        max-width: 62ch;
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.75rem;
+        padding: 0 1.25rem;
+        border: 1px solid transparent;
+        border-radius: var(--radius-md);
+        font: 600 0.9375rem/1 var(--font-sans);
+        text-decoration: none;
+        white-space: nowrap;
+        transition:
+          background-color 140ms var(--ease),
+          border-color 140ms var(--ease),
+          transform 140ms var(--ease);
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+      .btn:active {
+        transform: none;
+      }
+      .btn-primary {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        box-shadow: inset 0 1px 0 var(--highlight);
+      }
+      .btn-primary:hover {
+        background: color-mix(in oklch, var(--primary) 88%, var(--background));
+      }
+      .btn-outline {
+        border-color: var(--input);
+        color: var(--foreground);
+      }
+      .btn-outline:hover {
+        background: var(--secondary);
+      }
+
+      /* Header */
+      .site-header {
+        border-bottom: 1px solid var(--border);
+      }
+      .site-header .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 4rem;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        min-height: 2.75rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        text-decoration: none;
+      }
+      /* The mark: a selected layer, its corner handle in the selection colour. */
+      .mark {
+        position: relative;
+        width: 1.125rem;
+        height: 1.125rem;
+        border: 1.5px solid currentColor;
+        border-radius: 3px;
+      }
+      .mark::after {
+        content: "";
+        position: absolute;
+        right: -4px;
+        bottom: -4px;
+        width: 6px;
+        height: 6px;
+        background: var(--background);
+        border: 1.5px solid var(--ring);
+        border-radius: 1px;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .nav-links li {
+        margin: 0;
+        padding: 0;
+      }
+      .nav-links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+        padding: 0 0.75rem;
+        border-radius: var(--radius-md);
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: var(--muted-foreground);
+        text-decoration: none;
+        transition:
+          color 140ms var(--ease),
+          background-color 140ms var(--ease);
+      }
+      .nav-links a:hover {
+        color: var(--foreground);
+        background: var(--secondary);
+      }
+      .menu {
+        display: none;
+        position: relative;
+      }
+      .menu summary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-height: 2.75rem;
+        padding: 0 0.9rem;
+        border: 1px solid var(--input);
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        font-size: 0.9375rem;
+        cursor: pointer;
+        list-style: none;
+      }
+      .menu summary::-webkit-details-marker {
+        display: none;
+      }
+      .menu summary::before {
+        content: "";
+        width: 14px;
+        height: 9px;
+        border-block: 1.5px solid currentColor;
+        background: linear-gradient(currentColor, currentColor) center / 100% 1.5px no-repeat;
+      }
+      .menu[open] summary {
+        background: var(--secondary);
+      }
+      .menu .nav-links {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 0.5rem);
+        z-index: 5;
+        flex-direction: column;
+        align-items: stretch;
+        min-width: 13rem;
+        padding: 0.375rem;
+        background: var(--popover);
+        color: var(--popover-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-raised);
+      }
+      .menu .nav-links a {
+        width: 100%;
+        min-height: 2.75rem;
+        color: var(--popover-foreground);
+      }
+      @media (max-width: 760px) {
+        .site-header nav.desktop {
+          display: none;
+        }
+        .menu {
+          display: block;
+        }
+      }
+
+      /* Hero */
+      .hero {
+        display: grid;
+        align-content: center;
+        min-height: min(calc(86svh - 4rem), 52rem);
+        padding-block: clamp(3.5rem, 2rem + 6vw, 8rem);
+      }
+      .hero-grid {
+        width: 100%;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: center;
+        gap: clamp(2.5rem, 5vw, 5rem);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 0 1.5rem;
+        padding: 0.3rem 0.7rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--card);
+        font: 500 0.8125rem/1.3 var(--font-sans);
+        color: var(--muted-foreground);
+      }
+      .hero h1 {
+        font-family: var(--font-display);
+        font-weight: 400;
+        font-size: clamp(3.25rem, 2rem + 3.7vw, 5.25rem);
+        line-height: 0.98;
+        letter-spacing: -0.022em;
+        margin-bottom: 1.5rem;
+      }
+      .hero .lede {
+        font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+        max-width: 40ch;
+        margin-bottom: 2rem;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 0;
+        margin: 0;
+        font: 400 0.8125rem var(--font-mono);
+        color: var(--muted-foreground);
+      }
+      .meta span + span::before {
+        content: "/";
+        margin: 0 0.75rem;
+        opacity: 0.5;
+      }
+
+      /* Hero object: a frame being laid out on the canvas, one layer selected. */
+      .canvas {
+        position: relative;
+        margin: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-2xl);
+        background:
+          radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 1.5px) 0 0 / 18px 18px,
+          linear-gradient(180deg, var(--sheen), transparent 35%),
+          var(--card);
+        box-shadow:
+          inset 0 1px 0 var(--highlight),
+          var(--shadow-raised);
+        overflow: hidden;
+      }
+      .canvas svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .f-frame {
+        fill: var(--background);
+        stroke: var(--border);
+      }
+      .f-strong {
+        fill: var(--foreground);
+        opacity: 0.85;
+      }
+      .f-surface {
+        fill: var(--secondary);
+      }
+      .f-faint {
+        fill: var(--muted-foreground);
+        opacity: 0.38;
+      }
+      .f-select {
+        fill: none;
+        stroke: var(--ring);
+        stroke-width: 1.5;
+      }
+      .f-handle {
+        fill: var(--background);
+        stroke: var(--ring);
+        stroke-width: 1.5;
+      }
+      .f-cursor {
+        fill: var(--foreground);
+        stroke: var(--background);
+        stroke-width: 1.5;
+        stroke-linejoin: round;
+      }
+
+      /* Sections */
+      .section {
+        padding-block: clamp(4.5rem, 3rem + 5vw, 8rem);
+      }
+      .section > .rail > .head {
+        margin-bottom: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+      }
+      .section .head .lede {
+        margin: 1rem 0 0;
+      }
+      .rule {
+        border-top: 1px solid var(--border);
+      }
+      .dense {
+        padding-block: clamp(4rem, 3rem + 3vw, 6rem);
+      }
+
+      /* Cards */
+      .card {
+        min-width: 0;
+        padding: clamp(1.25rem, 0.9rem + 1.4vw, 2.25rem);
+        background: linear-gradient(180deg, var(--sheen), transparent 40%), var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+      }
+      .card > :last-child,
+      .card > div > :last-child {
+        margin-bottom: 0;
+      }
+      .card h3 {
+        margin-bottom: 0.65rem;
+      }
+      .card .muted {
+        color: var(--muted-foreground);
+      }
+      .label {
+        margin: 0 0 0.75rem;
+        font: 500 0.8125rem var(--font-sans);
+        color: var(--muted-foreground);
+      }
+
+      /* Install */
+      .install-stack {
+        display: grid;
+        gap: 1.25rem;
+      }
+      .people {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 0 clamp(1.5rem, 1rem + 3vw, 3.5rem);
+        padding: clamp(1.25rem, 0.75rem + 2.4vw, 3rem);
+      }
+      .people .run {
+        grid-column: 1 / -1;
+      }
+      .people .run .codebox {
+        margin-bottom: 1.75rem;
+      }
+      .people .then {
+        padding-left: clamp(1.5rem, 1rem + 2vw, 3rem);
+        border-left: 1px solid var(--border);
+      }
+      .people .then ol > li {
+        margin-bottom: 0.85rem;
+      }
+      .agents {
+        display: grid;
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr);
+        gap: clamp(1.5rem, 1rem + 3vw, 3.5rem);
+      }
+      .agents-body {
+        max-width: 72ch;
+      }
+
+      /* Code boxes (markup from codeBox() in build-site.mjs) */
+      .codebox {
+        margin: 0 0 1.25rem;
+        background: var(--code);
+        color: var(--code-foreground);
+        border: 1px solid var(--code-border);
+        border-radius: var(--radius-lg);
+        box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.04);
+        overflow: hidden;
+      }
+      .codebar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.375rem 0.375rem 0.375rem 1rem;
+        border-bottom: 1px solid oklch(1 0 0 / 0.08);
+        font: 500 0.75rem var(--font-sans);
+        color: var(--code-muted);
+      }
+      .codebox pre {
+        margin: 0;
+        padding: 0.9rem 1rem 1rem;
+        font: 400 0.8125rem/1.7 var(--font-mono);
+        /* Keep commands on one line (scroll if needed) so a URL is never broken across lines. */
+        white-space: pre;
+        overflow-x: auto;
+        scrollbar-color: oklch(1 0 0 / 0.2) transparent;
+      }
+      .codebox pre:focus-visible {
+        outline-offset: -2px;
+      }
+      .codebox pre code {
+        font: inherit;
+        background: none;
+        border: 0;
+        padding: 0;
+        color: inherit;
+      }
+      .copy {
+        position: relative;
+        flex: none;
+        min-width: 4.75rem;
+        min-height: 2rem;
+        padding: 0 0.85rem;
+        font: 600 0.8125rem var(--font-sans);
+        color: var(--code-foreground);
+        background: oklch(1 0 0 / 0.06);
+        border: 1px solid oklch(1 0 0 / 0.14);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition:
+          background-color 140ms var(--ease),
+          border-color 140ms var(--ease),
+          color 140ms var(--ease);
+      }
+      /* A 44px tall target around the compact button. */
+      .copy::after {
+        content: "";
+        position: absolute;
+        inset: -6px -4px;
+      }
+      .copy:hover {
+        background: oklch(1 0 0 / 0.11);
+        border-color: oklch(1 0 0 / 0.24);
+      }
+      .copy.done {
+        background: var(--success);
+        border-color: var(--success);
+        color: var(--success-foreground);
+      }
+
+      /* Why use it: one large card, then varied spans */
+      .bento {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 1.25rem;
+      }
+      .bento .card {
+        display: flex;
+        flex-direction: column;
+      }
+      .bento .card p {
+        color: var(--muted-foreground);
+      }
+      .b-a {
+        grid-column: span 7;
+        grid-row: span 2;
+      }
+      .b-a h3 {
+        font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+        max-width: 18ch;
+      }
+      .b-b,
+      .b-c,
+      .b-d {
+        grid-column: span 5;
+      }
+      .b-e {
+        grid-column: span 7;
+      }
+      .stat {
+        margin: auto 0 0;
+        padding-top: 1.25rem;
+        font: 400 0.8125rem var(--font-mono);
+        color: var(--muted-foreground);
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 0.5rem 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .chips li {
+        margin: 0;
+        padding: 0.3rem 0.6rem;
+        font: 400 0.8125rem var(--font-mono);
+        background: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+      }
+      .b-a .chips {
+        margin-top: auto;
+        padding-top: 1.25rem;
+      }
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        margin: auto 0 0;
+        padding: 1.25rem 0 0;
+        list-style: none;
+        border-top: 1px solid var(--border);
+      }
+      .facts li {
+        margin: 0;
+        padding: 0;
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+      }
+      .facts code {
+        display: block;
+        width: fit-content;
+        margin-bottom: 0.3rem;
+        color: var(--foreground);
+      }
+
+      /* What you can do */
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: clamp(2rem, 1rem + 4vw, 5rem);
+        align-items: start;
+      }
+      .features-copy h2 {
+        margin-bottom: 2rem;
+      }
+      .features-body > p {
+        max-width: 60ch;
+        padding-left: 1.25rem;
+        border-left: 1px solid var(--border);
+      }
+      .features-body > p strong:first-child {
+        font-size: 1.0625rem;
+      }
+      .notes {
+        color: var(--muted-foreground);
+        font-size: 0.9375rem;
+      }
+
+      /* Reference sections: a heading column beside the content */
+      .docs {
+        display: grid;
+        grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+        gap: clamp(1.5rem, 1rem + 4vw, 5rem);
+        align-items: start;
+      }
+      .docs .head {
+        position: sticky;
+        top: 1.5rem;
+      }
+      .docs .head .lede {
+        margin: 1rem 0 0;
+        font-size: 1rem;
+      }
+      .docs-body {
+        max-width: 68ch;
+      }
+      .docs-body > ol > li,
+      .docs-body > ul > li {
+        margin-bottom: 0.85rem;
+      }
+      .rows > ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .rows li {
+        margin: 0;
+        padding: 1.1rem 0;
+        border-top: 1px solid var(--border);
+      }
+      .rows li:last-child {
+        border-bottom: 1px solid var(--border);
+      }
+
+      /* Tools */
+      .tool-group + .tool-group {
+        margin-top: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+      }
+      .tool-group h3 {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .count {
+        font: 400 0.8125rem var(--font-mono);
+        color: var(--muted-foreground);
+      }
+      .table-wrap {
+        overflow-x: auto;
+        margin: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--card);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9375rem;
+      }
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      th {
+        background: var(--muted);
+        font: 500 0.8125rem var(--font-sans);
+        color: var(--muted-foreground);
+      }
+      td {
+        color: var(--muted-foreground);
+      }
+      td:first-child {
+        width: 1%;
+        white-space: nowrap;
+        color: var(--foreground);
+      }
+      td:first-child code {
+        background: none;
+        border: 0;
+        padding: 0;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+      }
+      td code {
+        color: var(--foreground);
+      }
+
+      /* Closing call to action */
+      .cta {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        align-items: end;
+        gap: 0 clamp(1.5rem, 1rem + 4vw, 5rem);
+        padding: clamp(1.5rem, 1rem + 3vw, 4rem);
+        border-radius: var(--radius-2xl);
+        box-shadow: inset 0 1px 0 var(--highlight);
+      }
+      .cta h2 {
+        font-family: var(--font-display);
+        font-weight: 400;
+        font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3.75rem);
+        line-height: 1.02;
+        letter-spacing: -0.02em;
+        margin-bottom: 1rem;
+      }
+      .cta .codebox {
+        grid-column: 1 / -1;
+        margin: clamp(1.5rem, 1rem + 1.5vw, 2.5rem) 0 0;
+      }
+      .cta h2 + p,
+      .cta-note {
+        margin: 0;
+      }
+
+      footer {
+        padding-block: 3rem;
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+      }
+      footer .rail {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem 2rem;
+      }
+      footer p {
+        margin: 0;
+      }
+      footer .links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+        margin-left: 1.25rem;
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+      }
+
+      /* Entrance: the hero copy rises in, then the canvas draws itself. */
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+      }
+      @keyframes appear {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+      }
+      @keyframes glide {
+        from {
+          opacity: 0;
+          transform: translate(14px, 12px);
+        }
+      }
+      .hero-copy > * {
+        animation: rise 520ms var(--ease) both;
+      }
+      .hero-copy > :nth-child(2) {
+        animation-delay: 60ms;
+      }
+      .hero-copy > :nth-child(3) {
+        animation-delay: 120ms;
+      }
+      .hero-copy > :nth-child(4) {
+        animation-delay: 180ms;
+      }
+      .hero-copy > :nth-child(5) {
+        animation-delay: 240ms;
+      }
+      .canvas {
+        animation: rise 520ms var(--ease) 120ms both;
+      }
+      .draw > * {
+        animation: appear 420ms var(--ease) both;
+        transform-box: fill-box;
+      }
+      .draw > :nth-child(1) {
+        animation-delay: 300ms;
+      }
+      .draw > :nth-child(2) {
+        animation-delay: 370ms;
+      }
+      .draw > :nth-child(3) {
+        animation-delay: 440ms;
+      }
+      .draw > :nth-child(4) {
+        animation-delay: 510ms;
+      }
+      .draw > :nth-child(5) {
+        animation-delay: 580ms;
+      }
+      .draw > :nth-child(6) {
+        animation-delay: 650ms;
+      }
+      .draw > :nth-child(7) {
+        animation-delay: 720ms;
+      }
+      .draw > :nth-child(8) {
+        animation: glide 520ms var(--ease) 820ms both;
+      }
+
+      /* Layout breakpoints */
+      @media (max-width: 1080px) {
+        .agents {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0.5rem;
+        }
+        .facts {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      @media (max-width: 900px) {
+        .hero-grid,
+        .people,
+        .split,
+        .docs,
+        .cta {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .hero {
+          min-height: 0;
+        }
+        .canvas {
+          max-width: 34rem;
+        }
+        .people .then {
+          padding: 1.5rem 0 0;
+          border-left: 0;
+          border-top: 1px solid var(--border);
+        }
+        .bento > .card {
+          grid-column: 1 / -1;
+          grid-row: auto;
+        }
+        .docs .head {
+          position: static;
+        }
+        .cta-note {
+          margin-top: 0.75rem;
+        }
+      }
+      /* Small screens: each tool row becomes a record, its name above its description. */
+      @media (max-width: 640px) {
+        .table-wrap table,
+        .table-wrap tbody,
+        .table-wrap tr,
+        .table-wrap td {
+          display: block;
+          width: auto;
+        }
+        .table-wrap thead {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip: rect(0 0 0 0);
+        }
+        .table-wrap tr {
+          padding: 0.9rem 1rem;
+          border-bottom: 1px solid var(--border);
+        }
+        .table-wrap tr:last-child {
+          border-bottom: 0;
+        }
+        .table-wrap td {
+          padding: 0;
+          border: 0;
+        }
+        .table-wrap td:first-child {
+          margin-bottom: 0.3rem;
+        }
+        td:first-child code {
+          white-space: normal;
+          overflow-wrap: anywhere;
+        }
+      }
+      @media (max-width: 560px) {
+        footer .links a {
+          margin: 0 1.25rem 0 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          animation-delay: 0ms !important;
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header" id="top">
+      <div class="rail bar">
+        <a class="brand" href="#top"><span class="mark" aria-hidden="true"></span>Figma MCP Server</a>
+        <nav class="desktop" aria-label="Sections">
+          <ul class="nav-links">
+            <li><a href="#install">Install</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#tools">Tools</a></li>
+            <li><a href="#security">Security</a></li>
+            <li><a href="#troubleshooting">Help</a></li>
+          </ul>
+        </nav>
+        <details class="menu">
+          <summary>Menu</summary>
+          <nav aria-label="Sections">
+            <ul class="nav-links">
+              <li><a href="#install">Install</a></li>
+              <li><a href="#features">Features</a></li>
+              <li><a href="#tools">Tools</a></li>
+              <li><a href="#security">Security</a></li>
+              <li><a href="#troubleshooting">Help</a></li>
+            </ul>
+          </nav>
+        </details>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="rail hero-grid">
+          <div class="hero-copy">
+            <p class="badge">Claude Desktop extension for macOS</p>
+            <h1 id="hero-title">Let Claude Desktop read, comment on, and draw in your Figma files.</h1>
+            <p class="lede">It runs locally on your Mac. One command installs it, and the same command updates it.</p>
+            <div class="actions">
+              <a class="btn btn-primary" href="#install">Install</a>
+              <a class="btn btn-outline" href="#install-agents">Guide for AI agents</a>
+            </div>
+            <p class="meta">
+              <span>Version 2.7.4</span><span>40 tools</span><span>macOS</span>
+            </p>
+          </div>
+          <figure
+            class="canvas"
+            role="img"
+            aria-label="Illustration: a page layout drawn inside a Figma frame, with one layer selected"
+          >
+            <svg
+              viewBox="0 0 520 400"
+              width="520"
+              height="400"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <g class="draw">
+                <rect class="f-frame" x="70.5" y="54.5" width="379" height="290" rx="10" />
+                <g>
+                  <rect class="f-faint" x="70" y="34" width="62" height="8" rx="4" />
+                  <rect class="f-strong" x="92" y="76" width="44" height="10" rx="3" />
+                  <rect class="f-faint" x="318" y="77" width="26" height="8" rx="4" />
+                  <rect class="f-faint" x="352" y="77" width="26" height="8" rx="4" />
+                  <rect class="f-faint" x="386" y="77" width="42" height="8" rx="4" />
+                </g>
+                <rect class="f-surface" x="92" y="108" width="190" height="120" rx="8" />
+                <g>
+                  <rect class="f-strong" x="300" y="114" width="128" height="14" rx="3" />
+                  <rect class="f-strong" x="300" y="134" width="96" height="14" rx="3" />
+                  <rect class="f-faint" x="300" y="160" width="124" height="7" rx="3.5" />
+                  <rect class="f-faint" x="300" y="173" width="110" height="7" rx="3.5" />
+                </g>
+                <rect class="f-strong" x="300" y="198" width="70" height="24" rx="6" />
+                <g>
+                  <rect class="f-surface" x="92" y="248" width="104" height="74" rx="6" />
+                  <rect class="f-surface" x="208" y="248" width="104" height="74" rx="6" />
+                  <rect class="f-surface" x="324" y="248" width="104" height="74" rx="6" />
+                </g>
+                <g>
+                  <rect class="f-select" x="91" y="107" width="192" height="122" />
+                  <rect class="f-handle" x="87.5" y="103.5" width="7" height="7" />
+                  <rect class="f-handle" x="279.5" y="103.5" width="7" height="7" />
+                  <rect class="f-handle" x="87.5" y="225.5" width="7" height="7" />
+                  <rect class="f-handle" x="279.5" y="225.5" width="7" height="7" />
+                </g>
+                <path
+                  class="f-cursor"
+                  d="M290 236 l0 22 l5.5 -5 l4 9 l4 -1.8 l-4 -8.8 l7.5 -0.4 z"
+                />
+              </g>
+            </svg>
+          </figure>
+        </div>
+      </section>
+
+      <section id="install" class="section rule" aria-labelledby="install-title">
+        <div class="rail">
+          <div class="head">
+            <p class="kicker">Install</p>
+            <h2 id="install-title">One command, then a quick setup</h2>
+            <p class="lede">
+              The installer downloads the extension, checks its SHA-256, asks for your Figma token
+              in a secure prompt if none is saved yet (it goes straight to your macOS Keychain) and
+              opens Claude Desktop's install dialog, where you click Install.
+            </p>
+          </div>
+          <div class="install-stack">
+            <article class="card people" id="install-people" aria-labelledby="people-title">
+              <div class="run">
+                <h3 id="people-title">For people</h3>
+                <p class="muted">Open Terminal and run:</p>
+                <div class="codebox"><div class="codebar"><span>Terminal</span><button class="copy" type="button" aria-label="Copy install command">Copy</button></div><pre tabindex="0"><code>curl -fsSL https://wpp-jamie-mills.github.io/figma-mcp-server-site/install.sh | bash</code></pre></div>
+              </div>
+              <p class="muted restart-note"><strong>Heads up:</strong> The installer may need to quit and reopen Figma and Claude Desktop. It asks first each time, so save your work in both.</p>
+              <p class="muted">
+                You need macOS and Claude Desktop. You don't need Node.js, npm or git. To update
+                later, run the same command again (with the same <code>--dir</code>, if you used
+                one).
+              </p>
+              <div class="then">
+                <p class="label">Then</p>
+                <ol><li>If no token is saved yet, paste your Figma personal access token into the secure prompt (it goes straight to your macOS Keychain), then click Install in the dialog Claude Desktop opens.</li><li>Ask Claude: &quot;Is Figma connected?&quot; It runs <code>figma_ensure_ready</code>, which checks your token and the Figma plugin and tells you the one next step.</li><li>For the drawing tools (Figma Desktop needed), follow that next step (the drawing setup steps below have the details).</li></ol>
+              </div>
+              <div class="then">
+                <p class="label">Token scopes</p>
+                <p>Create the token at <a href="https://www.figma.com/settings/tokens" target="_blank" rel="noopener noreferrer">https://www.figma.com/settings/tokens</a> and give it only these scopes: <code>current_user:read</code> (<code>figma_whoami</code>), <code>file_content:read</code> and <code>file_metadata:read</code> (reading files, nodes and images), <code>file_versions:read</code> (version history), <code>file_comments:read</code> and <code>file_comments:write</code> (comments), <code>library_content:read</code> (components and styles), <code>projects:read</code> (projects and files) and <code>file_variables:read</code> (variables, which need a Figma Enterprise plan).</p>
+              </div>
+            </article>
+
+            <article class="card agents" id="install-agents" aria-labelledby="agents-title">
+              <div>
+                <h3 id="agents-title">For AI agents</h3>
+                <p class="muted">
+                  Use these steps if you are an AI agent installing this for a user.
+                </p>
+                <p class="muted restart-note"><strong>Heads up:</strong> The installer may need to quit and reopen Figma and Claude Desktop. It asks first each time, so save your work in both.</p>
+                <p class="muted">A plain-text version is in <a href="llms.txt">llms.txt</a>.</p>
+              </div>
+              <div class="agents-body">
+                <ol>
+                  <li>
+                    <strong>Check the machine.</strong> Continue only if
+                    <code>uname -s</code> prints <code>Darwin</code> and
+                    <code>/Applications/Claude.app</code> exists. Otherwise tell the user it needs
+                    macOS with Claude Desktop installed.
+                  </li>
+                  <li>
+                    <strong>Run the installer</strong> with this one command. It downloads the
+                    extension, checks its SHA-256, opens Claude Desktop's install dialog, and
+                    imports the plugin into Figma Desktop. It needs no other tools.
+                    <code>FIGMA_INSTALL_TTY=/dev/null</code> means there is no terminal: the
+                    installer never quits or restarts an app and answers no to every question.
+                    <code>--no-wait</code> makes it exit 0 once the dialog is open instead of
+                    waiting for the user to click <strong>Install</strong>. With no terminal or
+                    <code>--no-wait</code> it never opens the Figma token prompt (a dialog that
+                    waits for a person), so the command returns quickly; if no token is saved it
+                    says so, and the token is saved afterwards by <code>figma_set_token</code> or by
+                    the user running the installer with <code>--token</code>. It exits non-zero,
+                    with the reason on stderr, if anything fails before the dialog opens. Exit 0
+                    means the installer finished its steps, not that Claude Desktop installed the
+                    extension: confirm with <code>--status</code>.
+                  </li>
+                </ol>
+                <div class="codebox"><div class="codebar"><span>Terminal</span><button class="copy" type="button" aria-label="Copy install command for agents">Copy</button></div><pre tabindex="0"><code>curl -fsSL https://wpp-jamie-mills.github.io/figma-mcp-server-site/install.sh | FIGMA_INSTALL_TTY=/dev/null bash -s -- --no-wait</code></pre></div>
+                <p>
+                  To keep its data somewhere other than <code>~/.figma-mcp-server</code>, add
+                  <code>--dir "&lt;absolute path&gt;"</code> after <code>--no-wait</code>, and tell
+                  the user to choose the same folder in the dialog's
+                  <strong>Data folder</strong> field. If Claude Desktop already lists this version
+                  and you use the default data folder, the installer skips the dialog and says so.
+                  With <code>--dir</code> the dialog still opens so the Data folder can be set; the
+                  installer then says to finish the dialog and prints the
+                  <code>--status</code> command to run afterwards.
+                </p>
+                <p>
+                  If Figma is open and the plugin isn't imported yet, the installer leaves Figma
+                  alone and says how to finish. Ask the user whether Figma may be quit and reopened
+                  (they should save their work first). Only after they say yes, run the same command
+                  again with <code>--allow-figma-restart</code> added after <code>--no-wait</code>:
+                  that flag only answers yes to the Figma question and never restarts Claude
+                  Desktop. Otherwise the user imports the plugin by hand (Plugins → Development →
+                  Import plugin from manifest…, as the installer prints). After an upgrade the
+                  installer tells the user to restart Claude Desktop themselves; never quit Claude
+                  Desktop from inside Claude Desktop.
+                </p>
+                <ol start="3">
+                  <li>
+                    <strong>Hand over to the user.</strong> The installer opens Claude Desktop's
+                    install dialog. Ask the user to click <strong>Install</strong>, then confirm
+                    with <code>--status</code>. If no token is saved, call
+                    <code>figma_set_token</code> (a secure prompt that goes straight to the
+                    Keychain), or have the user run the installer with <code>--token</code>. Never
+                    ask for the token in chat, and never write it to a file or a command line.
+                  </li>
+                  <li>
+                    <strong>Verify.</strong> Run <code>install.sh --status</code> (add it after
+                    <code>bash -s --</code>) or read <code>~/.figma-mcp-server/status.json</code>;
+                    neither contains the token. Inside Claude Desktop, one call to
+                    <code>figma_ensure_ready</code> reports the version, token, plugin state and the
+                    next step. If the token is missing, call <code>figma_set_token</code>.
+                  </li>
+                  <li>
+                    <strong>Drawing (optional).</strong> The installer imports the plugin. Call
+                    <code>figma_ensure_ready</code>: it copies the pairing code to the clipboard.
+                    The user opens any file in Figma, chooses Plugins → Development → Figma MCP
+                    Server for Claude, pastes the pairing code (⌘V) in the window that opens, and
+                    starts the plugin each session with one click (Reconnect Claude in the file's
+                    right-hand panel once the plugin has run in that file, or ⌥⌘P).
+                  </li>
+                </ol>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="why" class="section rule" aria-labelledby="why-title">
+        <div class="rail">
+          <div class="head">
+            <p class="kicker">Why use it</p>
+            <h2 id="why-title">Claude works from the file itself</h2>
+          </div>
+          <div class="bento">
+            <article class="card b-a">
+              <h3>Grounded in the real file, not a screenshot or a description.</h3>
+              <p>
+                Claude reads actual layers, text, components, variables, comments and version
+                history, through 13 read tools:
+              </p>
+              <ul class="chips" aria-label="Read tools"><li>figma_whoami</li><li>figma_list_projects</li><li>figma_list_files</li><li>figma_get_file</li><li>figma_get_nodes</li><li>figma_export_images</li><li>figma_get_comments</li><li>figma_post_comment</li><li>figma_get_components</li><li>figma_get_variables</li><li>figma_get_versions</li><li>figma_set_token</li><li>figma_ensure_ready</li></ul>
+            </article>
+            <article class="card b-b">
+              <h3>From conversation to canvas</h3>
+              <p>
+                Describe a layout, a component or an animation and Claude builds it in the open
+                file, with live updates your collaborators see too.
+              </p>
+              <p class="stat">20 canvas tools</p>
+            </article>
+            <article class="card b-c">
+              <h3>Design-system aware</h3>
+              <p>
+                Claude can audit published components and styles, turn layers into components, add
+                component properties and place instances.
+              </p>
+            </article>
+            <article class="card b-d">
+              <h3>Motion included</h3>
+              <p>
+                Keyframes, built-in animation styles, timelines and path animation, where your Figma
+                plan supports motion.
+              </p>
+              <p class="stat">7 animation tools</p>
+            </article>
+            <article class="card b-e">
+              <h3>Local and private by design</h3>
+              <p>
+                The server runs on your Mac. The local bridge only listens on your own machine and
+                needs a pairing code, and your token stays in your Keychain.
+              </p>
+              <ul class="facts">
+                <li><code>127.0.0.1:3055</code>The bridge's only address</li>
+                <li><code>XXXX-XXXX</code>Pairing code the plugin must present</li>
+                <li><code>Keychain</code>Where your token is kept</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section rule" aria-labelledby="features-title">
+        <div class="rail split">
+          <div class="features-copy">
+            <p class="kicker">Features</p>
+            <h2 id="features-title">What you can do</h2>
+            <div class="features-body"><p><strong>Read files</strong> (no Figma Desktop needed). Claude can read any file your token can access: list projects and files, export layers as PNG, JPG, SVG or PDF, read components, styles and variables, see version history and comments, and post comments. You need a <a href="https://www.figma.com/settings/tokens" target="_blank" rel="noopener noreferrer">Figma personal access token</a>.</p>
+<p><strong>Draw and edit</strong> (needs Figma Desktop and a one-off pairing). Claude can create, edit, group, move, clone and delete layers, import SVG, work with components and instances, and add animations.</p></div>
+          </div>
+          <div>
+            <div class="codebox"><div class="codebar"><span>Try asking</span><button class="copy" type="button" aria-label="Copy example prompts">Copy</button></div><pre tabindex="0"><code>&quot;List my Figma projects&quot;
+&quot;Export the &#39;Hero&#39; frame from [file URL] as PNG&quot;
+&quot;What components does our design system have?&quot;
+&quot;Post a comment: &#39;Looks good!&#39; on this file&quot;
+&quot;Create a rectangle 200×100 at position 50,50&quot;
+&quot;Group these layers into a &#39;Header&#39; frame&quot;</code></pre></div>
+            <div class="notes"><p>Paste a Figma file URL or give a file key and Claude does the rest. Figma&#39;s API can&#39;t list your teams, so give a team ID (the number after <code>/team/</code> in a team page URL) or paste file URLs directly.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="drawing" class="section rule" aria-labelledby="drawing-title">
+        <div class="rail docs">
+          <div class="head">
+            <p class="kicker">Figma plugin</p>
+            <h2 id="drawing-title">Setting up drawing in Figma</h2>
+            <p class="lede">Drawing needs Figma Desktop and a one-off pairing.</p>
+          </div>
+          <div class="docs-body"><ol><li>The installer imports the plugin into Figma for you. It only asks to quit and reopen Figma when Figma is open and the plugin isn&#39;t imported yet.</li><li>In Figma desktop, open any file.</li><li>Choose Plugins → Development → Figma MCP Server for Claude.</li><li>In the window that opens, paste the pairing code (⌘V). The installer copies it to your clipboard (format <code>XXXX-XXXX</code>) when it creates it. If it isn&#39;t on your clipboard, ask Claude &quot;Is Figma connected?&quot;: it runs <code>figma_ensure_ready</code>, tells you what&#39;s missing and copies the code. The plugin connects straight away and shrinks to a &quot;Connected to Claude&quot; strip.</li><li>Next time, click <strong>Reconnect Claude</strong> in the file&#39;s right-hand panel (it appears in files where the plugin has already run; in a new file use Plugins → Development → Figma MCP Server for Claude), or press ⌥⌘P (Run last plugin). Keep the plugin window open while Claude works.</li></ol>
+<p>Figma remembers the code, so pairing is a one-off. The code is kept in <code>&lt;data folder&gt;/bridge-token</code>. If the import didn&#39;t work, <code>figma_canvas_setup</code> (or <code>install.sh --status</code>) shows where the plugin files are.</p></div>
+        </div>
+      </section>
+
+      <section id="tools" class="section dense rule" aria-labelledby="tools-title">
+        <div class="rail">
+          <div class="head">
+            <p class="kicker">Reference</p>
+            <h2 id="tools-title">Tools</h2>
+            <p class="lede">40 tools: 13 read, 20 canvas, 7 animation.</p>
+          </div>
+          <div class="tool-group">
+            <h3>Read tools <span class="count">13</span></h3>
+            <div class="table-wrap"><table><thead><tr><th>Tool</th><th>What it does</th></tr></thead><tbody><tr><td><code>figma_whoami</code></td><td>Return the Figma user the configured access token belongs to (handle, email).</td></tr><tr><td><code>figma_list_projects</code></td><td>List the projects in a Figma team.</td></tr><tr><td><code>figma_list_files</code></td><td>List the files in a Figma project, most recently modified first, with their file keys and URLs.</td></tr><tr><td><code>figma_get_file</code></td><td>Get a Figma file&#39;s metadata and page/frame outline. depth 1 = pages only, 2 = pages + top-level frames (default), 3+ = deeper layers (can be large).</td></tr><tr><td><code>figma_get_nodes</code></td><td>Get the layer tree for specific frames/layers: names, types, sizes, text content, fonts, fills, auto-layout.</td></tr><tr><td><code>figma_export_images</code></td><td>Render frames or layers to PNG, JPG, SVG or PDF.</td></tr><tr><td><code>figma_get_comments</code></td><td>List comments on a Figma file, newest first, threaded, with author, date, resolved state and the node they&#39;re pinned to.</td></tr><tr><td><code>figma_post_comment</code></td><td>Post a comment on a Figma file as the token&#39;s owner — visible to everyone with access.</td></tr><tr><td><code>figma_get_components</code></td><td>List the published components, component sets and styles (colour, text, effect, grid) in a file — useful for auditing a design system or library.</td></tr><tr><td><code>figma_get_variables</code></td><td>List variable collections, modes and variables (design tokens) defined in a file, with resolved values per mode.</td></tr><tr><td><code>figma_get_versions</code></td><td>List a file&#39;s version history (named versions and autosaves): who, when, label and description.</td></tr><tr><td><code>figma_set_token</code></td><td>Open a native macOS prompt where the user pastes their Figma personal access token (figd_…).</td></tr><tr><td><code>figma_ensure_ready</code></td><td>Report whether Figma and the canvas plugin are ready, and the one next step.</td></tr></tbody></table></div>
+          </div>
+          <div class="tool-group">
+            <h3>Canvas tools (create and edit) <span class="count">20</span></h3>
+            <div class="table-wrap"><table><thead><tr><th>Tool</th><th>What it does</th></tr></thead><tbody><tr><td><code>figma_canvas_status</code></td><td>Check whether the Figma MCP Server for Claude plugin is connected, and to which file and page.</td></tr><tr><td><code>figma_canvas_get_nodes</code></td><td>List layers in the file open in Figma: the current page&#39;s top-level nodes, a node&#39;s children (parent_id), or the current selection (selection=true).</td></tr><tr><td><code>figma_canvas_set_page</code></td><td>Switch to a page by name or id, creating it if create=true and it doesn&#39;t exist.</td></tr><tr><td><code>figma_canvas_create</code></td><td>Create a FRAME, RECTANGLE, ELLIPSE, LINE or TEXT node on the current page or inside parent_id, with properties applied (position, size, fill, stroke, radius, auto layout, text and font).</td></tr><tr><td><code>figma_canvas_update</code></td><td>Change properties of one or more existing layers (same property set as figma_canvas_create).</td></tr><tr><td><code>figma_canvas_import_svg</code></td><td>Draw an SVG on the canvas as editable layers (vectors, groups and text).</td></tr><tr><td><code>figma_canvas_delete</code></td><td>Delete layers by id.</td></tr><tr><td><code>figma_canvas_group</code></td><td>Wrap layers in a group (as=&#39;group&#39;) or a frame sized to their bounds (as=&#39;frame&#39;).</td></tr><tr><td><code>figma_canvas_ungroup</code></td><td>Ungroup groups (like ⇧⌘G), or dissolve frames, keeping each child&#39;s position and stacking place in the parent.</td></tr><tr><td><code>figma_canvas_get_text_styles</code></td><td>Read the font, size and enabled OpenType features (e.g. SS01, LIGA) of text layers, run by run.</td></tr><tr><td><code>figma_canvas_screenshot</code></td><td>Render a layer (or the current selection) as a PNG and return it inline, so you can check what was drawn.</td></tr><tr><td><code>figma_canvas_focus</code></td><td>Select layers and scroll/zoom the Figma viewport to them so the user can see them.</td></tr><tr><td><code>figma_canvas_make_component</code></td><td>Convert an existing frame or group into a main component in place (like ⌥⌘K).</td></tr><tr><td><code>figma_canvas_add_component_property</code></td><td>Add a TEXT, BOOLEAN or INSTANCE_SWAP property to a main component and bind it to layers inside it: TEXT → a text layer&#39;s characters, BOOLEAN → a layer&#39;s visibility, INSTANCE_SWAP → a nested instance&#39;s main component (default_value is then a component id).</td></tr><tr><td><code>figma_canvas_create_instance</code></td><td>Create an instance of a component, either at x,y in a parent (default: current page), or in place of an existing layer (replace_id: same parent, position and stacking order; the replaced layer is deleted).</td></tr><tr><td><code>figma_canvas_set_instance_properties</code></td><td>Set component property values on an instance by property name, e.g. {&quot;Headline&quot;: &quot;Autumn, unhurried&quot;, &quot;Image&quot;: &quot;&lt;component id&gt;&quot;}.</td></tr><tr><td><code>figma_canvas_clone</code></td><td>Duplicate a layer (⌘D), optionally into another parent and position.</td></tr><tr><td><code>figma_canvas_move</code></td><td>Re-parent a layer (parent_id, or page by name/id, created if missing) and/or change its stacking.</td></tr><tr><td><code>figma_canvas_rescale</code></td><td>Scale a layer and everything in it proportionally (like the K scale tool), e.g. 1.8 to enlarge a scene illustration.</td></tr><tr><td><code>figma_canvas_setup</code></td><td>Step-by-step instructions to connect Figma to this server: where the plugin files are, how to import it, and how to get the pairing code.</td></tr></tbody></table></div>
+          </div>
+          <div class="tool-group">
+            <h3>
+              Animation tools (Figma Motion required) <span class="count">7</span>
+            </h3>
+            <div class="table-wrap"><table><thead><tr><th>Tool</th><th>What it does</th></tr></thead><tbody><tr><td><code>figma_canvas_motion_status</code></td><td>Check whether Figma&#39;s motion (timeline/keyframe) API is enabled for this account, read a layer&#39;s frame timeline, and list Figma&#39;s built-in animation styles.</td></tr><tr><td><code>figma_canvas_set_keyframes</code></td><td>Add manual keyframe tracks to one or more layers (not top-level frames — animate their children).</td></tr><tr><td><code>figma_canvas_get_motion</code></td><td>Read a layer&#39;s manual keyframe tracks, applied animation styles and its frame&#39;s timeline.</td></tr><tr><td><code>figma_canvas_clear_motion</code></td><td>Remove all keyframe tracks and animation styles from layers (the layers themselves are untouched). recursive=true also clears everything inside them, e.g. pass a frame id to strip a whole slide.</td></tr><tr><td><code>figma_canvas_follow_path</code></td><td>Move a layer&#39;s centre along a vector path between start and end seconds (e.g. a dot leading a connector line as it draws).</td></tr><tr><td><code>figma_canvas_set_timeline</code></td><td>Set the duration (seconds) of the timeline of the top-level frame containing a layer.</td></tr><tr><td><code>figma_canvas_apply_animation_style</code></td><td>Apply one of Figma&#39;s built-in animation styles (names from figma_canvas_motion_status, e.g. Fade) to a layer, with duration, timeline offset and style props (e.g. {timing:&#39;in&#39;, easing:{type:&#39;EASE_OUT&#39;}}).</td></tr></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="security" class="section rule" aria-labelledby="security-title">
+        <div class="rail docs">
+          <div class="head">
+            <p class="kicker">Security</p>
+            <h2 id="security-title">Security and privacy</h2>
+            <p class="lede">What the bridge accepts, and where your token is kept.</p>
+          </div>
+          <div class="docs-body rows"><ul><li>The bridge listens on <code>127.0.0.1:3055</code> only, so only your Mac can reach it. The plugin connects to <code>ws://localhost:3055</code> because Figma&#39;s plugin rules require that name; it reaches the same local address, and the server never binds any other.</li><li>Connections carrying a web-page origin are refused. A sandboxed page can still connect (it looks like the plugin), so the pairing code is what protects the bridge.</li><li>The plugin must present a pairing code (<code>XXXX-XXXX</code>) stored in <code>&lt;data folder&gt;/bridge-token</code>, readable only by you. Code checks are paced to 4 per second in total and never lock you out. Unpaired connections are capped at 16 (idle ones are dropped first), limited to 4 KB per message, and closed after 10 seconds. After the first pairing, the plugin reconnects with a long random session token (<code>&lt;data folder&gt;/bridge-session</code>) that skips the queue, so a hostile page on your Mac flooding connections can no longer block it. A first pairing made while such a page is running can still stall.</li><li>Your Figma token lives only in the macOS Keychain, saved from a hidden-input prompt; it never goes through chat, command-line arguments or files. Give it only the scopes you need and revoke it at <a href="https://www.figma.com/settings/tokens" target="_blank" rel="noopener noreferrer">https://www.figma.com/settings/tokens</a>.</li><li>The installer&#39;s SHA-256 check catches a corrupted or partial download, not a compromised site: the checksum and the installer are served from the same site. Read <code>install.sh</code> before running it if that matters to you.</li><li>Canvas edits appear live to collaborators and can be undone with ⌘Z in Figma.</li></ul></div>
+        </div>
+      </section>
+
+      <section id="troubleshooting" class="section rule" aria-labelledby="troubleshooting-title">
+        <div class="rail docs">
+          <div class="head">
+            <p class="kicker">Help</p>
+            <h2 id="troubleshooting-title">Troubleshooting</h2>
+            <p class="lede">The messages you might see, and what to do about each.</p>
+          </div>
+          <div class="docs-body rows"><ul><li><strong>&quot;No Figma token found&quot;</strong>: ask Claude to run <code>figma_set_token</code>, or run the installer again with <code>--token</code>.</li><li><strong>&quot;The Figma plugin isn&#39;t connected&quot;</strong>: open the file in Figma Desktop, choose Plugins → Development → Figma MCP Server for Claude and keep its window open. If you haven&#39;t set it up yet, ask Claude to run <code>figma_canvas_setup</code>.</li><li><strong>&quot;The Figma plugin tried to connect but isn&#39;t paired&quot;</strong>: ask Claude &quot;Is Figma connected?&quot; (it runs <code>figma_ensure_ready</code> and copies the pairing code to your clipboard), then paste it (⌘V) in the plugin window.</li></ul></div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="cta-title">
+        <div class="rail">
+          <div class="card cta">
+            <div>
+              <h2 id="cta-title">One command to install, the same one to update.</h2>
+              <p class="muted">No developer tools, no config files.</p>
+            </div>
+            <p class="muted cta-note">
+              Installing for someone as an AI agent? Follow the
+              <a href="#install-agents">agent guide</a>.
+            </p>
+            <div class="codebox"><div class="codebar"><span>Terminal</span><button class="copy" type="button" aria-label="Copy install command">Copy</button></div><pre tabindex="0"><code>curl -fsSL https://wpp-jamie-mills.github.io/figma-mcp-server-site/install.sh | bash</code></pre></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="rule">
+      <div class="rail">
+        <p>Figma MCP Server · generated from the project README for version 2.7.4.</p>
+        <p class="links"><a href="summary.md">summary.md</a><a href="llms.txt">llms.txt</a></p>
+      </div>
+    </footer>
+
+    <div class="sr-only" role="status" id="copy-status"></div>
+    <script>
+      (function () {
+        var status = document.getElementById("copy-status");
+        function fallbackCopy(text) {
+          var area = document.createElement("textarea");
+          area.value = text;
+          area.setAttribute("readonly", "");
+          area.style.position = "fixed";
+          area.style.opacity = "0";
+          var previous = document.activeElement;
+          document.body.appendChild(area);
+          area.select();
+          var ok = false;
+          try {
+            ok = document.execCommand("copy");
+          } catch (e) {}
+          document.body.removeChild(area);
+          if (previous && previous.focus) previous.focus();
+          return ok;
+        }
+        function copyText(text) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text).then(
+              function () {
+                return true;
+              },
+              function () {
+                return fallbackCopy(text);
+              },
+            );
+          }
+          return Promise.resolve(fallbackCopy(text));
+        }
+        Array.prototype.forEach.call(document.querySelectorAll(".codebox .copy"), function (btn) {
+          var label = btn.textContent;
+          var aria = btn.getAttribute("aria-label");
+          var timer;
+          btn.addEventListener("click", function () {
+            var pre = btn.closest(".codebox").querySelector("pre");
+            copyText(pre.textContent.replace(/\n$/, "")).then(function (ok) {
+              clearTimeout(timer);
+              if (!ok) {
+                // Leave the command selected so the user can copy it with the keyboard.
+                var range = document.createRange();
+                range.selectNodeContents(pre);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+              btn.textContent = ok ? "Copied" : "Press ⌘C";
+              btn.classList.toggle("done", ok);
+              btn.setAttribute("aria-label", ok ? "Copied" : "Copy failed");
+              status.textContent = ok ? "Copied to clipboard" : "Copy failed";
+              timer = setTimeout(function () {
+                btn.textContent = label;
+                btn.classList.remove("done");
+                btn.setAttribute("aria-label", aria);
+                status.textContent = "";
+              }, 1500);
+            });
+          });
+        });
+
+        // The small-screen menu closes on Escape (returning focus to its button), on a link and on an outside click.
+        var menu = document.querySelector(".menu");
+        if (menu) {
+          var summary = menu.querySelector("summary");
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && menu.open) {
+              menu.open = false;
+              summary.focus();
+            }
+          });
+          menu.addEventListener("click", function (e) {
+            if (e.target.closest("a")) menu.open = false;
+          });
+          document.addEventListener("click", function (e) {
+            if (menu.open && !menu.contains(e.target)) menu.open = false;
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

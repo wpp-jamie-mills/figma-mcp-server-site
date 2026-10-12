@@ -1,0 +1,90 @@
+# Figma MCP Server
+
+> Let Claude Desktop read, comment on, and draw in your Figma files. It runs locally on your Mac. A Claude Desktop extension for macOS, version 2.7.4, with 40 tools.
+
+## Install (agents)
+
+Continue only if `uname -s` prints `Darwin` and `/Applications/Claude.app` exists. Otherwise tell the user it needs macOS with Claude Desktop.
+
+Tell the user first: The installer may need to quit and reopen Figma and Claude Desktop. It asks first each time, so save your work in both.
+
+### First install
+
+Run the installer with this one command. It downloads the extension, checks its SHA-256 (nothing runs before the check passes), opens Claude Desktop's install dialog, and imports the plugin into Figma Desktop. `FIGMA_INSTALL_TTY=/dev/null` means there is no terminal: the installer never quits or restarts an app and answers no to every question. `--no-wait` makes it exit 0 once the dialog is open instead of waiting for the user to click Install. With no terminal or `--no-wait` it never opens the Figma token prompt (a dialog that waits for a person), so the command returns quickly; if no token is saved it says so, and the token is saved afterwards by `figma_set_token` or by the user running the installer with `--token`. It exits non-zero, with the reason on stderr, if anything fails before the dialog opens. Exit 0 means the installer finished its steps, not that Claude Desktop installed the extension ("Install not confirmed" also exits 0): confirm with `--status`:
+
+```bash
+curl -fsSL https://wpp-jamie-mills.github.io/figma-mcp-server-site/install.sh | FIGMA_INSTALL_TTY=/dev/null bash -s -- --no-wait
+```
+
+To keep data somewhere other than `~/.figma-mcp-server`, add `--dir "<absolute path>"` after `--no-wait` (the user must choose the same folder in the dialog's Data folder field). If Claude Desktop already lists this version and you use the default data folder, the installer skips the dialog and says so. With `--dir` the dialog still opens so the Data folder can be set; the installer then says to finish the dialog and prints the `--status` command to run afterwards.
+
+If Figma is open and the plugin isn't imported yet, the installer leaves Figma alone and says how to finish. Ask the user whether Figma may be quit and reopened (they should save their work first). Only after they say yes, run the same command again with `--allow-figma-restart` added after `--no-wait`; that flag only answers yes to the Figma question, and never restarts Claude Desktop. Otherwise the user can import the plugin by hand (Plugins → Development → Import plugin from manifest…, as the installer prints). After an upgrade the installer tells the user to restart Claude Desktop themselves; never quit Claude Desktop from inside Claude Desktop.
+
+Ask the user to click Install in the dialog, then run the installer with `--status` to confirm. If no token is saved, call `figma_set_token` (a secure prompt) or have the user run the installer with `--token`. Never ask for the token in chat, and never write it to a file or a command line. Agents may check whether a token is present, never its value.
+
+### Upgrade
+
+Run the same command again. If Claude Desktop may still be running the old version, the installer asks whether to quit and reopen it (with no terminal it doesn't: tell the user to restart Claude Desktop). The saved token and pairing code are kept.
+
+### Missing or rejected token
+
+Call `figma_set_token` (it opens the same secure prompt and returns only the Figma handle), or run the installer with `--token`.
+
+Create the token at https://www.figma.com/settings/tokens and give it only these scopes: `current_user:read` (`figma_whoami`), `file_content:read` and `file_metadata:read` (reading files, nodes and images), `file_versions:read` (version history), `file_comments:read` and `file_comments:write` (comments), `library_content:read` (components and styles), `projects:read` (projects and files) and `file_variables:read` (variables, which need a Figma Enterprise plan).
+
+### Verify
+
+Without opening Claude Desktop: run the installer with `--status` (after `bash -s --`), or read `~/.figma-mcp-server/status.json`. Neither contains the token. Inside Claude Desktop: call `figma_ensure_ready` once. It reports the server version, whether the token is saved and valid (and the Figma handle), whether the Figma plugin is connected (open file and page), and the single next step. Pass `wait: true` to wait up to about 50 seconds for the plugin, then call again if it says so.
+
+### Drawing setup
+
+The installer imports the plugin into Figma (it asks before quitting and reopening Figma, and only when the plugin isn't imported yet). `figma_ensure_ready` copies the pairing code to the clipboard when pairing is needed; the user opens any file in Figma, chooses Plugins → Development → Figma MCP Server for Claude and pastes the pairing code (⌘V) in the window that opens. Each session the user clicks Reconnect Claude in the file's right-hand panel (it appears in files where the plugin has already run; in a new file use Plugins → Development → Figma MCP Server for Claude), or presses ⌥⌘P (Run last plugin). If the import didn't work, call `figma_canvas_setup` for the manual steps.
+
+## Tools
+
+- `figma_whoami`: Return the Figma user the configured access token belongs to (handle, email).
+- `figma_list_projects`: List the projects in a Figma team.
+- `figma_list_files`: List the files in a Figma project, most recently modified first, with their file keys and URLs.
+- `figma_get_file`: Get a Figma file's metadata and page/frame outline. depth 1 = pages only, 2 = pages + top-level frames (default), 3+ = deeper layers (can be large).
+- `figma_get_nodes`: Get the layer tree for specific frames/layers: names, types, sizes, text content, fonts, fills, auto-layout.
+- `figma_export_images`: Render frames or layers to PNG, JPG, SVG or PDF.
+- `figma_get_comments`: List comments on a Figma file, newest first, threaded, with author, date, resolved state and the node they're pinned to.
+- `figma_post_comment`: Post a comment on a Figma file as the token's owner — visible to everyone with access.
+- `figma_get_components`: List the published components, component sets and styles (colour, text, effect, grid) in a file — useful for auditing a design system or library.
+- `figma_get_variables`: List variable collections, modes and variables (design tokens) defined in a file, with resolved values per mode.
+- `figma_get_versions`: List a file's version history (named versions and autosaves): who, when, label and description.
+- `figma_set_token`: Open a native macOS prompt where the user pastes their Figma personal access token (figd_…).
+- `figma_ensure_ready`: Report whether Figma and the canvas plugin are ready, and the one next step.
+- `figma_canvas_status`: Check whether the Figma MCP Server for Claude plugin is connected, and to which file and page.
+- `figma_canvas_get_nodes`: List layers in the file open in Figma: the current page's top-level nodes, a node's children (parent_id), or the current selection (selection=true).
+- `figma_canvas_set_page`: Switch to a page by name or id, creating it if create=true and it doesn't exist.
+- `figma_canvas_create`: Create a FRAME, RECTANGLE, ELLIPSE, LINE or TEXT node on the current page or inside parent_id, with properties applied (position, size, fill, stroke, radius, auto layout, text and font).
+- `figma_canvas_update`: Change properties of one or more existing layers (same property set as figma_canvas_create).
+- `figma_canvas_import_svg`: Draw an SVG on the canvas as editable layers (vectors, groups and text).
+- `figma_canvas_delete`: Delete layers by id.
+- `figma_canvas_group`: Wrap layers in a group (as='group') or a frame sized to their bounds (as='frame').
+- `figma_canvas_ungroup`: Ungroup groups (like ⇧⌘G), or dissolve frames, keeping each child's position and stacking place in the parent.
+- `figma_canvas_get_text_styles`: Read the font, size and enabled OpenType features (e.g. SS01, LIGA) of text layers, run by run.
+- `figma_canvas_screenshot`: Render a layer (or the current selection) as a PNG and return it inline, so you can check what was drawn.
+- `figma_canvas_focus`: Select layers and scroll/zoom the Figma viewport to them so the user can see them.
+- `figma_canvas_make_component`: Convert an existing frame or group into a main component in place (like ⌥⌘K).
+- `figma_canvas_add_component_property`: Add a TEXT, BOOLEAN or INSTANCE_SWAP property to a main component and bind it to layers inside it: TEXT → a text layer's characters, BOOLEAN → a layer's visibility, INSTANCE_SWAP → a nested instance's main component (default_value is then a component id).
+- `figma_canvas_create_instance`: Create an instance of a component, either at x,y in a parent (default: current page), or in place of an existing layer (replace_id: same parent, position and stacking order; the replaced layer is deleted).
+- `figma_canvas_set_instance_properties`: Set component property values on an instance by property name, e.g. {"Headline": "Autumn, unhurried", "Image": "<component id>"}.
+- `figma_canvas_clone`: Duplicate a layer (⌘D), optionally into another parent and position.
+- `figma_canvas_move`: Re-parent a layer (parent_id, or page by name/id, created if missing) and/or change its stacking.
+- `figma_canvas_rescale`: Scale a layer and everything in it proportionally (like the K scale tool), e.g. 1.8 to enlarge a scene illustration.
+- `figma_canvas_setup`: Step-by-step instructions to connect Figma to this server: where the plugin files are, how to import it, and how to get the pairing code.
+- `figma_canvas_motion_status`: Check whether Figma's motion (timeline/keyframe) API is enabled for this account, read a layer's frame timeline, and list Figma's built-in animation styles.
+- `figma_canvas_set_keyframes`: Add manual keyframe tracks to one or more layers (not top-level frames — animate their children).
+- `figma_canvas_get_motion`: Read a layer's manual keyframe tracks, applied animation styles and its frame's timeline.
+- `figma_canvas_clear_motion`: Remove all keyframe tracks and animation styles from layers (the layers themselves are untouched). recursive=true also clears everything inside them, e.g. pass a frame id to strip a whole slide.
+- `figma_canvas_follow_path`: Move a layer's centre along a vector path between start and end seconds (e.g. a dot leading a connector line as it draws).
+- `figma_canvas_set_timeline`: Set the duration (seconds) of the timeline of the top-level frame containing a layer.
+- `figma_canvas_apply_animation_style`: Apply one of Figma's built-in animation styles (names from figma_canvas_motion_status, e.g. Fade) to a layer, with duration, timeline offset and style props (e.g. {timing:'in', easing:{type:'EASE_OUT'}}).
+
+## Links
+
+- [Landing page](https://wpp-jamie-mills.github.io/figma-mcp-server-site/): install guides for people and agents
+- [Summary](https://wpp-jamie-mills.github.io/figma-mcp-server-site/summary.md): this project as one markdown page
+- [Installer](https://wpp-jamie-mills.github.io/figma-mcp-server-site/install.sh): the script the install command runs
